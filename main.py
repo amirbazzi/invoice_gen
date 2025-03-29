@@ -6,8 +6,11 @@ from datetime import date
 # Get the base directory of the current script
 # After (more robust)
 import pathlib
-BASE_DIR = pathlib.Path(__file__).parent.resolve()
+from pathlib import Path
 
+BASE_DIR = Path(__file__).parent.resolve()
+FONT_BOOKMAN_REGULAR = BASE_DIR / "BOOKOS.TTF"
+FONT_BOOKMAN_BOLD = BASE_DIR / "BOOKOSB.TTF"
 
 # print(f"DEBUG BASE DIR =================== {BASE_DIR}")
 
@@ -19,10 +22,10 @@ BASE_DIR = pathlib.Path(__file__).parent.resolve()
 
 
 # New Bookman fonts (ensure these files exist in the same folder):
-FONT_BOOKMAN_REGULAR = os.path.join(BASE_DIR, "BOOKOS.TTF")  # Bookman Old Style Regular
+#FONT_BOOKMAN_REGULAR = os.path.join(BASE_DIR, "BOOKOS.TTF")  # Bookman Old Style Regular
 
 print(f"DEBUG FONT_BOOKMAN_REGULAR DIR =================== {FONT_BOOKMAN_REGULAR}")
-FONT_BOOKMAN_BOLD    = os.path.join(BASE_DIR, "BOOKOSB.TTF")  # Bookman Old Style Bold
+#FONT_BOOKMAN_BOLD    = os.path.join(BASE_DIR, "BOOKOSB.TTF")  # Bookman Old Style Bold
 
 # Logo file path
 LOGO_PATH = os.path.join(BASE_DIR, "ashi_logo.jpg")
@@ -64,8 +67,8 @@ def init_pdf() -> FPDF:
         st.write(f"BOOKOSB.TTF: {BASE_DIR / 'BOOKOSB.TTF'}")
 
         # Add Bookman Old Style fonts
-        pdf_invoice.add_font("Bookman", "", FONT_BOOKMAN_REGULAR, uni=True)
-        pdf_invoice.add_font("Bookman", "B", FONT_BOOKMAN_BOLD, uni=True)
+        pdf_invoice.add_font("Bookman", "", str(FONT_BOOKMAN_REGULAR), uni=True)
+        pdf_invoice.add_font("Bookman", "B", str(FONT_BOOKMAN_BOLD), uni=True)
 
         # Example: default to Bookman
         pdf_invoice.set_font("Bookman", size=10)
