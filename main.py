@@ -6,11 +6,7 @@ from datetime import date
 # Get the base directory of the current script
 # After (more robust)
 import pathlib
-from pathlib import Path
 
-BASE_DIR = Path(__file__).parent.resolve()
-FONT_BOOKMAN_REGULAR = BASE_DIR / "BOOKOS.TTF"
-FONT_BOOKMAN_BOLD = BASE_DIR / "BOOKOSB.TTF"
 
 # print(f"DEBUG BASE DIR =================== {BASE_DIR}")
 
@@ -22,13 +18,13 @@ FONT_BOOKMAN_BOLD = BASE_DIR / "BOOKOSB.TTF"
 
 
 # New Bookman fonts (ensure these files exist in the same folder):
-#FONT_BOOKMAN_REGULAR = os.path.join(BASE_DIR, "BOOKOS.TTF")  # Bookman Old Style Regular
+FONT_BOOKMAN_REGULAR = "BOOKOS.TTF"  # Bookman Old Style Regular
 
-print(f"DEBUG FONT_BOOKMAN_REGULAR DIR =================== {FONT_BOOKMAN_REGULAR}")
-#FONT_BOOKMAN_BOLD    = os.path.join(BASE_DIR, "BOOKOSB.TTF")  # Bookman Old Style Bold
+# print(f"DEBUG FONT_BOOKMAN_REGULAR DIR =================== {FONT_BOOKMAN_REGULAR}")
+FONT_BOOKMAN_BOLD    = "BOOKOSB.TTF"  # Bookman Old Style Bold
 
 # Logo file path
-LOGO_PATH = os.path.join(BASE_DIR, "ashi_logo.jpg")
+LOGO_PATH = "ashi_logo.jpg"
 
 CURRENCY_SYMBOL = "€"
 
@@ -62,13 +58,13 @@ def init_pdf() -> FPDF:
     st.write("Exists?", os.path.exists(FONT_BOOKMAN_BOLD))
 
     try:
-        st.write("Final font paths:")
-        st.write(f"BOOKOS.TTF: {BASE_DIR / 'BOOKOS.TTF'}")
-        st.write(f"BOOKOSB.TTF: {BASE_DIR / 'BOOKOSB.TTF'}")
+        # st.write("Final font paths:")
+        # st.write(f"BOOKOS.TTF: {BASE_DIR / 'BOOKOS.TTF'}")
+        # st.write(f"BOOKOSB.TTF: {BASE_DIR / 'BOOKOSB.TTF'}")
 
         # Add Bookman Old Style fonts
-        pdf_invoice.add_font("Bookman", "", str(FONT_BOOKMAN_REGULAR), uni=True)
-        pdf_invoice.add_font("Bookman", "B", str(FONT_BOOKMAN_BOLD), uni=True)
+        pdf_invoice.add_font("Bookman", "", FONT_BOOKMAN_REGULAR, uni=True)
+        pdf_invoice.add_font("Bookman", "B", FONT_BOOKMAN_BOLD, uni=True)
 
         # Example: default to Bookman
         pdf_invoice.set_font("Bookman", size=10)
@@ -92,75 +88,70 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
          - Must sum to the total PRICE (not total to be paid).
       4) Bank details & T&C
     """
-    pdf_invoice = init_pdf()
+    pdf = init_pdf()
     # Set margins to 10mm on all sides
-    pdf_invoice.set_margins(10, 10, 10)
+    pdf.set_margins(10, 10, 10)
     # Set bottom margin for auto page breaks to 10mm
-    pdf_invoice.set_auto_page_break(auto=True, margin=10)
+    pdf.set_auto_page_break(auto=True, margin=10)
 
     # Debugging outputs for font paths
-    st.write("### Font Path Debugging")
-    st.write("Current working directory:", os.getcwd())
-    st.write("System path:", sys.path)
 
-    st.write("FONT_BOOKMAN_REGULAR:", FONT_BOOKMAN_REGULAR)
-    st.write("FONT_BOOKMAN_BOLD:", FONT_BOOKMAN_BOLD)       
 
     
 
-    if not pdf_invoice:
+    if not pdf:
         return None
 
     try:
         # 1) HEADER
         if os.path.exists(LOGO_PATH):
-            pdf_invoice.image(LOGO_PATH, x=(210 - 30) / 2, y=10, w=30)
+            pdf.image(LOGO_PATH, x=(210 - 30) / 2, y=10, w=30)
         else:
             st.warning(f"Logo file not found: {LOGO_PATH}")
 
-        pdf_invoice.set_y(30)
+        pdf.set_y(30)
 
         # Company Info (left)
-        pdf_invoice.set_font("Bookman", "B", 10)
-        pdf_invoice.set_xy(10, 30)
-        pdf_invoice.cell(60, 5, "ASHI STUDIO SAS", ln=1)
+        pdf.set_font("Bookman", "B", 10)
+        pdf.set_xy(10, 30)
+        pdf.cell(60, 5, "ASHI STUDIO SAS", ln=1)
 
-        pdf_invoice.set_font("Bookman", "", 9)
-        pdf_invoice.set_x(10)
-        pdf_invoice.cell(60, 5, "9 AVENUE HOCHE", ln=1)
-        pdf_invoice.set_x(10)
-        pdf_invoice.cell(60, 5, "75008 PARIS, FRANCE", ln=1)
+        pdf.set_font("Bookman", "", 9)
+        pdf.set_x(10)
+        pdf.cell(60, 5, "9 AVENUE HOCHE", ln=1)
+        pdf.set_x(10)
+        pdf.cell(60, 5, "75008 PARIS, FRANCE", ln=1)
 
         # Invoice # & Date (right)
-        pdf_invoice.set_xy(140, 30)
+        pdf.set_xy(140, 30)
         inv_text = (
             f"Invoice Number: {invoice_data['invoice_number']}\n\n"
             f"Date: {invoice_data['invoice_date']}"
         )
-        pdf_invoice.multi_cell(60, 5, inv_text, align="R")
+        pdf.multi_cell(60, 5, inv_text, align="R")
 
-        pdf_invoice.ln(10)
+        pdf.ln(10)
 
         # Client Info
-        pdf_invoice.set_font("Bookman", "B", 10)
-        pdf_invoice.cell(0, 5, "Client Information", ln=1)
-        pdf_invoice.set_font("Bookman", "", 10)
-        pdf_invoice.cell(0, 5, f"Name: {invoice_data['client_name']}", ln=1)
-        pdf_invoice.cell(0, 5, f"Country: {invoice_data['country']}", ln=1)
-        pdf_invoice.cell(0, 5, f"Phone: {invoice_data['phone']}", ln=1)
-        pdf_invoice.ln(5)
+        pdf.set_font("Bookman", "B", 10)
+        pdf.cell(0, 5, "Client Information", ln=1)
+        pdf.set_font("Bookman", "", 10)
+        pdf.cell(0, 5, f"Name: {invoice_data['client_name']}", ln=1)
+        pdf.cell(0, 5, f"Country: {invoice_data['country']}", ln=1)
+        pdf.cell(0, 5, f"Phone: {invoice_data['phone']}", ln=1)
+        pdf.ln(5)
 
         # 2) ITEMS TABLE
         col_desc_w = 70
         col_price_w = 50
         col_paid_w = 60
 
-        pdf_invoice.set_font("Bookman", "B", 10)
-        pdf_invoice.cell(col_desc_w, 6, "DESCRIPTION", 1, 0, "C")
-        pdf_invoice.cell(col_price_w, 6, "TOTAL PRICE", 1, 0, "C")
-        pdf_invoice.cell(col_paid_w, 6, "TO BE PAID", 1, 1, "C")
+        pdf.set_font("Bookman", "B", 10)
+        pdf.cell(col_desc_w, 6, "DESCRIPTION", 1, 0, "C")
+        pdf.cell(col_price_w, 6, "TOTAL PRICE", 1, 0, "C")
+        pdf.cell(col_paid_w, 6, "TO BE PAID", 1, 1, "C")
 
-        pdf_invoice.set_font("Bookman", "", 10)
+        pdf.set_font("Bookman", "", 10)
         sum_price = 0
         sum_paid = 0
         for item in invoice_data["items"]:
@@ -170,14 +161,14 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
             sum_price += price
             sum_paid += paid
 
-            pdf_invoice.cell(col_desc_w, 6, desc, 1, 0, "L")
-            pdf_invoice.cell(col_price_w, 6, f"{price:,d} {CURRENCY_SYMBOL}", 1, 0, "L")
-            pdf_invoice.cell(col_paid_w, 6, f"{paid:,d} {CURRENCY_SYMBOL}", 1, 1, "R")
+            pdf.cell(col_desc_w, 6, desc, 1, 0, "L")
+            pdf.cell(col_price_w, 6, f"{price:,d} {CURRENCY_SYMBOL}", 1, 0, "L")
+            pdf.cell(col_paid_w, 6, f"{paid:,d} {CURRENCY_SYMBOL}", 1, 1, "R")
 
         # Summation row
-        pdf_invoice.cell(col_desc_w, 6, "", 0, 0, "L")
-        pdf_invoice.cell(col_price_w, 6, f"{sum_price:,d} {CURRENCY_SYMBOL}", 0, 0, "L")
-        pdf_invoice.cell(col_paid_w, 6, f"{sum_paid:,d} {CURRENCY_SYMBOL}", 0, 1, "R")
+        pdf.cell(col_desc_w, 6, "", 0, 0, "L")
+        pdf.cell(col_price_w, 6, f"{sum_price:,d} {CURRENCY_SYMBOL}", 0, 0, "L")
+        pdf.cell(col_paid_w, 6, f"{sum_paid:,d} {CURRENCY_SYMBOL}", 0, 1, "R")
 
         # VAT + Total under 3rd column
         vat = invoice_data["vat"]
@@ -186,26 +177,26 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         label_w = 20
         val_w = col_paid_w - label_w
 
-        pdf_invoice.cell(col_desc_w, 6, "", 0, 0, "L")
-        pdf_invoice.cell(col_price_w, 6, "", 0, 0, "L")
-        pdf_invoice.cell(label_w, 6, "VAT", 0, 0, "L")
-        pdf_invoice.cell(val_w, 6, f"{vat:,d}", 0, 1, "R")
+        pdf.cell(col_desc_w, 6, "", 0, 0, "L")
+        pdf.cell(col_price_w, 6, "", 0, 0, "L")
+        pdf.cell(label_w, 6, "VAT", 0, 0, "L")
+        pdf.cell(val_w, 6, f"{vat:,d}", 0, 1, "R")
 
-        pdf_invoice.cell(col_desc_w, 6, "", 0, 0, "L")
-        pdf_invoice.cell(col_price_w, 6, "", 0, 0, "L")
-        pdf_invoice.cell(label_w, 6, "Total", 0, 0, "L")
-        pdf_invoice.cell(val_w, 6, f"{final_total:,d} {CURRENCY_SYMBOL}", 0, 1, "R")
+        pdf.cell(col_desc_w, 6, "", 0, 0, "L")
+        pdf.cell(col_price_w, 6, "", 0, 0, "L")
+        pdf.cell(label_w, 6, "Total", 0, 0, "L")
+        pdf.cell(val_w, 6, f"{final_total:,d} {CURRENCY_SYMBOL}", 0, 1, "R")
 
-        pdf_invoice.ln(1)
+        pdf.ln(1)
 
         # 3) PAYMENT SCHEDULE
-        pdf_invoice.set_font("Bookman", "B", 10)
-        pdf_invoice.cell(60, 6, "PAYMENT", 1, 0, "C")
-        pdf_invoice.cell(40, 6, "DATE", 1, 0, "C")
-        pdf_invoice.cell(40, 6, "PERCENTAGE", 1, 0, "C")
-        pdf_invoice.cell(40, 6, "AMOUNT", 1, 1, "C")
+        pdf.set_font("Bookman", "B", 10)
+        pdf.cell(60, 6, "PAYMENT", 1, 0, "C")
+        pdf.cell(40, 6, "DATE", 1, 0, "C")
+        pdf.cell(40, 6, "PERCENTAGE", 1, 0, "C")
+        pdf.cell(40, 6, "AMOUNT", 1, 1, "C")
 
-        pdf_invoice.set_font("Bookman", "", 10)
+        pdf.set_font("Bookman", "", 10)
         sum_price_local = sum_price  # Payment plan must match total PRICE
         for idx, pay in enumerate(invoice_data["payments"]):
             pay_name = pay["name"] or "N/A"
@@ -218,18 +209,18 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
             elif amt == 0 and perc != 0:
                 amt = int(round(perc / 100 * sum_price_local))
 
-            pdf_invoice.cell(60, 6, pay_name, 1, 0, "L")
-            pdf_invoice.cell(40, 6, pay_date, 1, 0, "L")
-            pdf_invoice.cell(40, 6, f"{perc:,d}%", 1, 0, "L")
-            pdf_invoice.cell(40, 6, f"{amt:,d} {CURRENCY_SYMBOL}", 1, 1, "L")
+            pdf.cell(60, 6, pay_name, 1, 0, "L")
+            pdf.cell(40, 6, pay_date, 1, 0, "L")
+            pdf.cell(40, 6, f"{perc:,d}%", 1, 0, "L")
+            pdf.cell(40, 6, f"{amt:,d} {CURRENCY_SYMBOL}", 1, 1, "L")
 
             invoice_data["payments"][idx]["percentage"] = perc
             invoice_data["payments"][idx]["amount"] = amt
 
-        pdf_invoice.ln(1)
-        y_line = pdf_invoice.get_y()
-        pdf_invoice.line(10, y_line, 200, y_line)
-        pdf_invoice.ln(1)
+        pdf.ln(1)
+        y_line = pdf.get_y()
+        pdf.line(10, y_line, 200, y_line)
+        pdf.ln(1)
 
         def example_bank_details_4columns(pdf):
             pdf.set_font("Bookman", "B", 10)
@@ -289,25 +280,25 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
                 current_y = pdf.get_y()
             return current_y
 
-        example_bank_details_4columns(pdf_invoice)
+        example_bank_details_4columns(pdf)
 
         # 5) TERMS & CONDITIONS
-        pdf_invoice.set_font("Bookman", "B", 10)
-        pdf_invoice.cell(0, 5, "Terms & Conditions", ln=1)
-        pdf_invoice.ln(3)
+        pdf.set_font("Bookman", "B", 10)
+        pdf.cell(0, 5, "Terms & Conditions", ln=1)
+        pdf.ln(3)
 
-        pdf_invoice.set_font("Bookman", "", 8)
+        pdf.set_font("Bookman", "", 8)
         for i, pay in enumerate(invoice_data["payments"]):
-            pdf_invoice.write(5, f"• A {ordinal(i)} payment of ")
-            pdf_invoice.set_font("Bookman", "B", 8)
-            pdf_invoice.write(5, f"{pay['percentage']}%")
-            pdf_invoice.set_font("Bookman", "", 8)
-            pdf_invoice.write(5, " of the total price is required")
+            pdf.write(5, f"• A {ordinal(i)} payment of ")
+            pdf.set_font("Bookman", "B", 8)
+            pdf.write(5, f"{pay['percentage']}%")
+            pdf.set_font("Bookman", "", 8)
+            pdf.write(5, " of the total price is required")
             if pay["name"]:
-                pdf_invoice.write(5, f" as {pay['name']}")
+                pdf.write(5, f" as {pay['name']}")
             if pay["description"]:
-                pdf_invoice.write(5, f" ({pay['description']})")
-            pdf_invoice.write(5, "\n")
+                pdf.write(5, f" ({pay['description']})")
+            pdf.write(5, "\n")
 
         standard_terms = [
             "• As per the company policy, once a dress is purchased, it is not subject to return or refund",
@@ -320,21 +311,21 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
 
         for idx, term in enumerate(standard_terms):
             if idx in [0, 1]:
-                pdf_invoice.set_font("Bookman", "B", 8)
+                pdf.set_font("Bookman", "B", 8)
             else:
-                pdf_invoice.set_font("Bookman", "", 8)
-            pdf_invoice.write(5, term + "\n")
+                pdf.set_font("Bookman", "", 8)
+            pdf.write(5, term + "\n")
 
-        pdf_invoice.ln(3)
-        y_line = pdf_invoice.get_y()
-        pdf_invoice.line(10, y_line, 200, y_line)
-        pdf_invoice.ln(3)
+        pdf.ln(3)
+        y_line = pdf.get_y()
+        pdf.line(10, y_line, 200, y_line)
+        pdf.ln(3)
 
-        pdf_invoice.set_font("Bookman", "B", 8)
-        pdf_invoice.cell(0, 5, "THANK YOU FOR CHOOSING ASHI STUDIO", ln=1, align="C")
-        pdf_invoice.cell(0, 5, "WWW.ASHISTUDIO.COM", ln=1, align="C")
+        pdf.set_font("Bookman", "B", 8)
+        pdf.cell(0, 5, "THANK YOU FOR CHOOSING ASHI STUDIO", ln=1, align="C")
+        pdf.cell(0, 5, "WWW.ASHISTUDIO.COM", ln=1, align="C")
 
-        return pdf_invoice.output(dest="S")
+        return pdf.output(dest="S").encode("latin1")
     except Exception as e:
         st.error(f"Failed to generate PDF: {e}")
         return None
