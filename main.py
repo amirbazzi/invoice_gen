@@ -8,7 +8,7 @@ from fpdf import FPDF
 # Configuration & Constants
 # -------------------------------------------------------------------
 FONT_BOOKMAN_REGULAR = "BOOKOS.TTF"  # Bookman Old Style Regular
-FONT_BOOKMAN_BOLD = "BOOKOSB.TTF"     # Bookman Old Style Bold
+FONT_BOOKMAN_BOLD = "BOOKOSB.TTF"   # Bookman Old Style Bold
 LOGO_PATH = "ashi_logo.jpg"
 CURRENCY_SYMBOL = "€"
 
@@ -76,8 +76,8 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
     """
     Creates an invoice PDF with:
       1) Header (logo, company info, invoice details, client info)
-      2) Items table with totals and VAT
-      3) Payment schedule table
+      2) Items table with totals and VAT (centered)
+      3) Payment schedule table (centered)
       4) Bank details in a 4-column layout
       5) Terms & Conditions and final message
     """
@@ -110,8 +110,10 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         
         # Invoice Number & Date (right)
         pdf.set_xy(140, 30)
-        inv_text = (f"Invoice Number: {invoice_data['invoice_number']}\n\n"
-                    f"Date: {invoice_data['invoice_date']}")
+        inv_text = (
+            f"Invoice Number: {invoice_data['invoice_number']}\n\n"
+            f"Date: {invoice_data['invoice_date']}"
+        )
         pdf.multi_cell(60, 5, inv_text, align="R")
         pdf.ln(10)
         
@@ -124,20 +126,31 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         safe_cell(pdf, 0, 5, f"Phone: {invoice_data['phone']}", new_line=True)
         pdf.ln(5)
         
-        # --- 2) ITEMS TABLE ---
+        # --- 2) ITEMS TABLE (centered) ---
+        # Define column widths
         col_desc_w = 70
         col_price_w = 50
         col_paid_w = 60
+        table_width = col_desc_w + col_price_w + col_paid_w  # = 180
 
+        # Centering logic: page content width = 190 (for A4 with 10mm margins each side)
+        # leftover space = 190 - 180 = 10 -> offset = 10/2 = 5
+        # So final X for left edge = left_margin + offset = 10 + 5 = 15
+        table_left = 10 + (190 - table_width) / 2
+
+        # Table Header
+        pdf.set_x(table_left)
         pdf.set_font("Bookman", "B", 10)
         safe_cell(pdf, col_desc_w, 6, "DESCRIPTION", border=1, new_line=False, align="C")
         safe_cell(pdf, col_price_w, 6, "TOTAL PRICE", border=1, new_line=False, align="C")
         safe_cell(pdf, col_paid_w, 6, "TO BE PAID", border=1, new_line=True, align="C")
         
+        # Table Rows (Items)
         pdf.set_font("Bookman", "", 10)
         sum_price = 0
         sum_paid = 0
         for item in invoice_data["items"]:
+            pdf.set_x(table_left)
             desc = item["description"]
             price = item["price"]
             paid = item["paid"]
@@ -149,51 +162,71 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
             safe_cell(pdf, col_paid_w, 6, f"{paid:,d} {CURRENCY_SYMBOL}", border=1, new_line=True, align="R")
         
         # Summation row
-        safe_cell(pdf, col_desc_w, 6, "", border=0, new_line=False)
+        pdf.set_x(table_left)
+        pdf.set_font("Bookman", "B", 10)
+        safe_cell(pdf, col_desc_w, 6, "Total", border=0, new_line=False, align="L")
+        pdf.set_font("Bookman", "", 10)
         safe_cell(pdf, col_price_w, 6, f"{sum_price:,d} {CURRENCY_SYMBOL}", border=0, new_line=False, align="L")
         safe_cell(pdf, col_paid_w, 6, f"{sum_paid:,d} {CURRENCY_SYMBOL}", border=0, new_line=True, align="R")
         
-        # VAT and Final Total (placed under the third column)
+        # VAT and Final Total
         vat = invoice_data["vat"]
         final_total = sum_paid + vat
         label_w = 20
         val_w = col_paid_w - label_w
-
-        safe_cell(pdf, col_desc_w, 6, "", border=0, new_line=False)
-        safe_cell(pdf, col_price_w, 6, "", border=0, new_line=False)
+        
+        # VAT row
+        pdf.set_x(table_left + col_desc_w + col_price_w)
         safe_cell(pdf, label_w, 6, "VAT", border=0, new_line=False, align="L")
         safe_cell(pdf, val_w, 6, f"{vat:,d}", border=0, new_line=True, align="R")
 
-        safe_cell(pdf, col_desc_w, 6, "", border=0, new_line=False)
-        safe_cell(pdf, col_price_w, 6, "", border=0, new_line=False)
+        # Final row
+        pdf.set_x(table_left + col_desc_w + col_price_w)
+        pdf.set_font("Bookman", "B", 10)
         safe_cell(pdf, label_w, 6, "Total", border=0, new_line=False, align="L")
+        pdf.set_font("Bookman", "", 10)
         safe_cell(pdf, val_w, 6, f"{final_total:,d} {CURRENCY_SYMBOL}", border=0, new_line=True, align="R")
         pdf.ln(1)
         
-        # --- 3) PAYMENT SCHEDULE ---
+        # --- 3) PAYMENT SCHEDULE (centered) ---
         pdf.set_font("Bookman", "B", 10)
-        safe_cell(pdf, 60, 6, "PAYMENT", border=1, new_line=False, align="C")
-        safe_cell(pdf, 40, 6, "DATE", border=1, new_line=False, align="C")
-        safe_cell(pdf, 40, 6, "PERCENTAGE", border=1, new_line=False, align="C")
-        safe_cell(pdf, 40, 6, "AMOUNT", border=1, new_line=True, align="C")
+
+        # Payment schedule columns
+        col_payname_w = 60
+        col_paydate_w = 40
+        col_perc_w = 40
+        col_amt_w = 40
+        pay_table_width = col_payname_w + col_paydate_w + col_perc_w + col_amt_w  # = 180
+
+        # Same centering approach
+        pay_table_left = 10 + (190 - pay_table_width) / 2
+
+        # Header
+        pdf.set_x(pay_table_left)
+        safe_cell(pdf, col_payname_w, 6, "PAYMENT", border=1, new_line=False, align="C")
+        safe_cell(pdf, col_paydate_w, 6, "DATE", border=1, new_line=False, align="C")
+        safe_cell(pdf, col_perc_w, 6, "PERCENTAGE", border=1, new_line=False, align="C")
+        safe_cell(pdf, col_amt_w, 6, "AMOUNT", border=1, new_line=True, align="C")
         
         pdf.set_font("Bookman", "", 10)
-        sum_price_local = sum_price  # Payment plan must match the total PRICE
+        sum_price_local = sum_price
         for idx, pay in enumerate(invoice_data["payments"]):
             pay_name = pay["name"] or "N/A"
             pay_date = pay["date"] or ""
             perc = pay["percentage"]
             amt = pay["amount"]
 
+            # Auto-calc if one is zero
             if perc == 0 and amt != 0:
                 perc = int(round(amt / sum_price_local * 100))
             elif amt == 0 and perc != 0:
                 amt = int(round(perc / 100 * sum_price_local))
 
-            safe_cell(pdf, 60, 6, pay_name, border=1, new_line=False, align="L")
-            safe_cell(pdf, 40, 6, pay_date, border=1, new_line=False, align="L")
-            safe_cell(pdf, 40, 6, f"{perc:,d}%", border=1, new_line=False, align="L")
-            safe_cell(pdf, 40, 6, f"{amt:,d} {CURRENCY_SYMBOL}", border=1, new_line=True, align="L")
+            pdf.set_x(pay_table_left)
+            safe_cell(pdf, col_payname_w, 6, pay_name, border=1, new_line=False, align="L")
+            safe_cell(pdf, col_paydate_w, 6, pay_date, border=1, new_line=False, align="L")
+            safe_cell(pdf, col_perc_w, 6, f"{perc:,d}%", border=1, new_line=False, align="L")
+            safe_cell(pdf, col_amt_w, 6, f"{amt:,d} {CURRENCY_SYMBOL}", border=1, new_line=True, align="L")
 
             invoice_data["payments"][idx]["percentage"] = perc
             invoice_data["payments"][idx]["amount"] = amt
@@ -301,10 +334,14 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         pdf.set_font("Bookman", "B", 8)
         safe_cell(pdf, 0, 5, "THANK YOU FOR CHOOSING ASHI STUDIO", new_line=True, align="C")
         safe_cell(pdf, 0, 5, "WWW.ASHISTUDIO.COM", new_line=True, align="C")
-        
-        # Return the PDF as bytes (no extra encoding required)
-        return bytes(pdf.output(dest="S"))
 
+        # Optional: Draw a page border
+        pdf.set_draw_color(0, 0, 0)
+        pdf.set_line_width(0.5)
+        pdf.rect(10, 10, 190, 277)
+
+        # Return the PDF as bytes
+        return bytes(pdf.output(dest="S"))
     
     except Exception as e:
         st.error(f"Failed to generate PDF: {e}")
