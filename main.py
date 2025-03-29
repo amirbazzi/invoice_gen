@@ -388,7 +388,7 @@ for i in range(int(num_payments)):
         amt_val = parse_int_with_commas(amt_str)
         payments.append({
             "name": pay_name,
-            "date": str(pay_date) if pay_date else "",
+            "date": pay_date.strftime("%d-%m-%Y") if date_enabled else "",
             "percentage": perc_val,
             "amount": amt_val,
             "description": pay_desc
