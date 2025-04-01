@@ -8,7 +8,7 @@ from fpdf import FPDF
 # Configuration & Constants
 # -------------------------------------------------------------------
 FONT_BOOKMAN_REGULAR = "BOOKOS.TTF"  # Bookman Old Style Regular
-FONT_BOOKMAN_BOLD = "BOOKOSB.TTF"   # Bookman Old Style Bold
+FONT_BOOKMAN_BOLD = "BOOKOSB.TTF"    # Bookman Old Style Bold
 LOGO_PATH = "ashi_logo.jpg"
 CURRENCY_SYMBOL = "€"
 
@@ -33,13 +33,11 @@ def safe_cell(pdf, w, h, txt, border=0, new_line=False, align="", fill=False, li
     """
     try:
         if new_line:
-            # Try using new_x and new_y (supported in FPDF>=2.5.2)
             return pdf.cell(w, h, txt, border=border, new_x="LMARGIN", new_y="NEXT",
                             align=align, fill=fill, link=link)
         else:
             return pdf.cell(w, h, txt, border=border, ln=0, align=align, fill=fill, link=link)
     except TypeError:
-        # Fallback to using ln parameter
         if new_line:
             return pdf.cell(w, h, txt, border=border, ln=1, align=align, fill=fill, link=link)
         else:
@@ -54,13 +52,12 @@ def init_pdf() -> FPDF:
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     
-    st.write("### Font Path Debugging")
-    st.write("Current working directory:", os.getcwd())
-    st.write("FONT_BOOKMAN_REGULAR path:", FONT_BOOKMAN_REGULAR, "Exists?", os.path.exists(FONT_BOOKMAN_REGULAR))
-    st.write("FONT_BOOKMAN_BOLD path:", FONT_BOOKMAN_BOLD, "Exists?", os.path.exists(FONT_BOOKMAN_BOLD))
+    # st.write("### Font Path Debugging")
+    # st.write("Current working directory:", os.getcwd())
+    # st.write("FONT_BOOKMAN_REGULAR path:", FONT_BOOKMAN_REGULAR, "Exists?", os.path.exists(FONT_BOOKMAN_REGULAR))
+    # st.write("FONT_BOOKMAN_BOLD path:", FONT_BOOKMAN_BOLD, "Exists?", os.path.exists(FONT_BOOKMAN_BOLD))
     
     try:
-        # Add Bookman fonts (ensure these TTF files exist)
         pdf.add_font("Bookman", "", FONT_BOOKMAN_REGULAR, uni=True)
         pdf.add_font("Bookman", "B", FONT_BOOKMAN_BOLD, uni=True)
         pdf.set_font("Bookman", size=10)
@@ -85,7 +82,6 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
     if not pdf:
         return None
 
-    # Set margins and auto page break
     pdf.set_margins(10, 10, 10)
     pdf.set_auto_page_break(auto=True, margin=10)
 
@@ -97,7 +93,6 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
             st.warning(f"Logo file not found: {LOGO_PATH}")
         pdf.set_y(30)
         
-        # Company Info (left)
         pdf.set_font("Bookman", "B", 10)
         pdf.set_xy(10, 30)
         safe_cell(pdf, 60, 5, "ASHI STUDIO SAS", new_line=True)
@@ -108,7 +103,6 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         pdf.set_x(10)
         safe_cell(pdf, 60, 5, "75008 PARIS, FRANCE", new_line=True)
         
-        # Invoice Number & Date (right)
         pdf.set_xy(140, 30)
         inv_text = (
             f"Invoice Number: {invoice_data['invoice_number']}\n\n"
@@ -117,7 +111,6 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         pdf.multi_cell(60, 5, inv_text, align="R")
         pdf.ln(10)
         
-        # Client Info
         pdf.set_font("Bookman", "B", 10)
         safe_cell(pdf, 0, 5, "Client Information", new_line=True)
         pdf.set_font("Bookman", "", 10)
@@ -127,25 +120,18 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         pdf.ln(5)
         
         # --- 2) ITEMS TABLE (centered) ---
-        # Define column widths
         col_desc_w = 70
         col_price_w = 50
         col_paid_w = 60
         table_width = col_desc_w + col_price_w + col_paid_w  # = 180
+        table_left = 10 + (190 - table_width) / 2  # for A4 with 10mm margins
 
-        # Centering logic: page content width = 190 (for A4 with 10mm margins each side)
-        # leftover space = 190 - 180 = 10 -> offset = 10/2 = 5
-        # So final X for left edge = left_margin + offset = 10 + 5 = 15
-        table_left = 10 + (190 - table_width) / 2
-
-        # Table Header
         pdf.set_x(table_left)
         pdf.set_font("Bookman", "B", 10)
         safe_cell(pdf, col_desc_w, 6, "DESCRIPTION", border=1, new_line=False, align="C")
         safe_cell(pdf, col_price_w, 6, "TOTAL PRICE", border=1, new_line=False, align="C")
         safe_cell(pdf, col_paid_w, 6, "TO BE PAID", border=1, new_line=True, align="C")
         
-        # Table Rows (Items)
         pdf.set_font("Bookman", "", 10)
         sum_price = 0
         sum_paid = 0
@@ -161,7 +147,6 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
             safe_cell(pdf, col_price_w, 6, f"{price:,d} {CURRENCY_SYMBOL}", border=1, new_line=False, align="L")
             safe_cell(pdf, col_paid_w, 6, f"{paid:,d} {CURRENCY_SYMBOL}", border=1, new_line=True, align="R")
         
-        # Summation row
         pdf.set_x(table_left)
         pdf.set_font("Bookman", "B", 10)
         safe_cell(pdf, col_desc_w, 6, "Total", border=0, new_line=False, align="L")
@@ -169,18 +154,15 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         safe_cell(pdf, col_price_w, 6, f"{sum_price:,d} {CURRENCY_SYMBOL}", border=0, new_line=False, align="L")
         safe_cell(pdf, col_paid_w, 6, f"{sum_paid:,d} {CURRENCY_SYMBOL}", border=0, new_line=True, align="R")
         
-        # VAT and Final Total
         vat = invoice_data["vat"]
         final_total = sum_paid + vat
         label_w = 20
         val_w = col_paid_w - label_w
         
-        # VAT row
         pdf.set_x(table_left + col_desc_w + col_price_w)
         safe_cell(pdf, label_w, 6, "VAT", border=0, new_line=False, align="L")
         safe_cell(pdf, val_w, 6, f"{vat:,d}", border=0, new_line=True, align="R")
 
-        # Final row
         pdf.set_x(table_left + col_desc_w + col_price_w)
         pdf.set_font("Bookman", "B", 10)
         safe_cell(pdf, label_w, 6, "Total", border=0, new_line=False, align="L")
@@ -190,18 +172,13 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         
         # --- 3) PAYMENT SCHEDULE (centered) ---
         pdf.set_font("Bookman", "B", 10)
-
-        # Payment schedule columns
         col_payname_w = 60
         col_paydate_w = 40
         col_perc_w = 40
         col_amt_w = 40
         pay_table_width = col_payname_w + col_paydate_w + col_perc_w + col_amt_w  # = 180
-
-        # Same centering approach
         pay_table_left = 10 + (190 - pay_table_width) / 2
 
-        # Header
         pdf.set_x(pay_table_left)
         safe_cell(pdf, col_payname_w, 6, "PAYMENT", border=1, new_line=False, align="C")
         safe_cell(pdf, col_paydate_w, 6, "DATE", border=1, new_line=False, align="C")
@@ -216,7 +193,6 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
             perc = pay["percentage"]
             amt = pay["amount"]
 
-            # Auto-calc if one is zero
             if perc == 0 and amt != 0:
                 perc = int(round(amt / sum_price_local * 100))
             elif amt == 0 and perc != 0:
@@ -335,12 +311,10 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         safe_cell(pdf, 0, 5, "THANK YOU FOR CHOOSING ASHI STUDIO", new_line=True, align="C")
         safe_cell(pdf, 0, 5, "WWW.ASHISTUDIO.COM", new_line=True, align="C")
 
-        # Optional: Draw a page border
         pdf.set_draw_color(0, 0, 0)
         pdf.set_line_width(0.5)
         pdf.rect(10, 10, 190, 277)
 
-        # Return the PDF as bytes
         return bytes(pdf.output(dest="S"))
     
     except Exception as e:
@@ -357,14 +331,14 @@ st.write("**Prices** must sum up for Payment Plan to match the **Total Price** (
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("Client Information")
-    invoice_number = st.text_input("Invoice Number", "369/2025")
-    client_name = st.text_input("Client Name", "Pr Noura Abdullah Faisal")
-    country = st.text_input("Country", "Kuwait")
-    phone = st.text_input("Phone", "+965 1234 5678")
+    invoice_number = st.text_input("Invoice Number", "")
+    client_name = st.text_input("Client Name", "")
+    country = st.text_input("Country", "")
+    phone = st.text_input("Phone", "")
 with col2:
     st.subheader("Invoice Details")
     invoice_date = st.date_input("Invoice Date", value=date.today())
-    vat_str = st.text_input("VAT (use commas)", "0")
+    vat_str = st.text_input("VAT (use commas)", "")
 
 # --- 2) Invoice Items ---
 st.subheader("Invoice Items")
@@ -372,9 +346,9 @@ num_items = st.number_input("Number of Items", 1, 20, 2)
 items = []
 for i in range(int(num_items)):
     with st.expander(f"Item {i+1}", expanded=(i == 0)):
-        desc = st.text_input(f"Description {i+1}", f"Item {i+1}", key=f"desc_{i}")
-        price_str = st.text_input(f"Total Price {i+1} (use commas)", "0", key=f"price_{i}")
-        paid_str = st.text_input(f"To Be Paid {i+1} (use commas)", "0", key=f"paid_{i}")
+        desc = st.text_input(f"Description {i+1}", "", key=f"desc_{i}")
+        price_str = st.text_input(f"Total Price {i+1} (use commas)", "", key=f"price_{i}")
+        paid_str = st.text_input(f"To Be Paid {i+1} (use commas)", "", key=f"paid_{i}")
         price_val = parse_int_with_commas(price_str)
         paid_val = parse_int_with_commas(paid_str)
         items.append({"description": desc, "price": price_val, "paid": paid_val})
@@ -395,31 +369,22 @@ st.write("---")
 st.subheader("Payment Schedule (must sum up to Total Price)")
 num_payments = st.number_input("Number of Payments", 1, 10, 3)
 payments = []
-default_names = ["Down Payment", "Fitting Payment", "Closing Payment"]
-default_perc = [50, 30, 20]
+default_options = ["", "down payment", "fitting payment", "closing payment", "full payment"]
 for i in range(int(num_payments)):
     with st.expander(f"Payment {i+1}", expanded=(i < 3)):
-        if i < 3:
-            pay_name = st.selectbox(
-                f"Payment Title {i+1}",
-                ["down payment", "fitting payment", "closing payment", "full payment"],
-                key=f"pay_name_{i}",
-                index=["down payment", "fitting payment", "closing payment", "full payment"].index(default_names[i].lower())
-            )
-        else:
-            pay_name = st.selectbox(
-                f"Payment Title {i+1}",
-                ["down payment", "fitting payment", "closing payment", "full payment"],
-                key=f"pay_name_{i}"
-            )
+        pay_name = st.selectbox(
+            f"Payment Title {i+1}",
+            default_options,
+            key=f"pay_name_{i}",
+            index=0
+        )
         date_enabled = st.checkbox(f"Set date for Payment {i+1}", value=(i == 0), key=f"chk_date_{i}")
         pay_date = st.date_input(f"Date {i+1}", value=date.today(), key=f"pay_date_{i}") if date_enabled else ""
         col_perc, col_amt = st.columns(2)
         with col_perc:
-            suggested_perc = str(default_perc[i]) if i < len(default_perc) else "0"
-            perc_str = st.text_input(f"Percentage {i+1}", suggested_perc, key=f"perc_{i}")
+            perc_str = st.text_input(f"Percentage {i+1}", "", key=f"perc_{i}")
         with col_amt:
-            amt_str = st.text_input(f"Amount {i+1} (use commas)", "0", key=f"amt_{i}")
+            amt_str = st.text_input(f"Amount {i+1} (use commas)", "", key=f"amt_{i}")
         pay_desc = st.text_input(f"Description {i+1}", "", key=f"desc_pay_{i}")
         perc_val = parse_int_with_commas(perc_str)
         amt_val = parse_int_with_commas(amt_str)
