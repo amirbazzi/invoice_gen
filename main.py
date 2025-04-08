@@ -143,16 +143,16 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
             sum_price += price
             sum_paid += paid
 
-            safe_cell(pdf, col_desc_w, 6, desc, border=1, new_line=False, align="L")
-            safe_cell(pdf, col_price_w, 6, f"{price:,d} {CURRENCY_SYMBOL}", border=1, new_line=False, align="L")
-            safe_cell(pdf, col_paid_w, 6, f"{paid:,d} {CURRENCY_SYMBOL}", border=1, new_line=True, align="R")
+            safe_cell(pdf, col_desc_w, 6, "  " + desc, border=1, new_line=False, align="L")
+            safe_cell(pdf, col_price_w, 6, f"{price:,d} ", border=1, new_line=False, align="C")
+            safe_cell(pdf, col_paid_w, 6, f"{paid:,d} ", border=1, new_line=True, align="R")
         
         pdf.set_x(table_left)
         pdf.set_font("Bookman", "B", 10)
-        safe_cell(pdf, col_desc_w, 6, "Total", border=0, new_line=False, align="L")
+        safe_cell(pdf, col_desc_w, 6, "  Total", border=0, new_line=False, align="L")
         pdf.set_font("Bookman", "", 10)
-        safe_cell(pdf, col_price_w, 6, f"{sum_price:,d} {CURRENCY_SYMBOL}", border=0, new_line=False, align="L")
-        safe_cell(pdf, col_paid_w, 6, f"{sum_paid:,d} {CURRENCY_SYMBOL}", border=0, new_line=True, align="R")
+        safe_cell(pdf, col_price_w, 6, f"{sum_price:,d} ", border=0, new_line=False, align="C")
+        safe_cell(pdf, col_paid_w, 6, f"{sum_paid:,d} ", border=0, new_line=True, align="R")
         
         vat = invoice_data["vat"]
         final_total = sum_paid + vat
@@ -200,17 +200,17 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
 
             pdf.set_x(pay_table_left)
             safe_cell(pdf, col_payname_w, 6, pay_name, border=1, new_line=False, align="L")
-            safe_cell(pdf, col_paydate_w, 6, pay_date, border=1, new_line=False, align="L")
-            safe_cell(pdf, col_perc_w, 6, f"{perc:,d}%", border=1, new_line=False, align="L")
-            safe_cell(pdf, col_amt_w, 6, f"{amt:,d} {CURRENCY_SYMBOL}", border=1, new_line=True, align="L")
+            safe_cell(pdf, col_paydate_w, 6, pay_date, border=1, new_line=False, align="C")
+            safe_cell(pdf, col_perc_w, 6, f"{perc:,d}%", border=1, new_line=False, align="C")
+            safe_cell(pdf, col_amt_w, 6, f"{amt:,d} {CURRENCY_SYMBOL}", border=1, new_line=True, align="C")
 
             invoice_data["payments"][idx]["percentage"] = perc
             invoice_data["payments"][idx]["amount"] = amt
         
-        pdf.ln(1)
+        pdf.ln(2)
         y_line = pdf.get_y()
         pdf.line(10, y_line, 200, y_line)
-        pdf.ln(1)
+        pdf.ln(2)
         
         # --- 4) BANK DETAILS (4 Columns) ---
         def print_bank_column(pdf, start_x, start_y, col_width, data, title_size=8, detail_size=8):
@@ -313,8 +313,8 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
 
         pdf.set_draw_color(0, 0, 0)
         pdf.set_line_width(0.5)
-        pdf.rect(10, 10, 190, 277)
-
+        pdf.rect(5, 5, 200, 287)  # A4 size with 10mm margins
+        pdf.set_line_width(0.2)     
         return bytes(pdf.output(dest="S"))
     
     except Exception as e:
@@ -369,7 +369,7 @@ st.write("---")
 st.subheader("Payment Schedule (must sum up to Total Price)")
 num_payments = st.number_input("Number of Payments", 1, 10, 3)
 payments = []
-default_options = ["", "down payment", "fitting payment", "closing payment", "full payment"]
+default_options = ["", "  Down payment", "  Fitting payment", "  Closing payment", "  Full payment"]
 for i in range(int(num_payments)):
     with st.expander(f"Payment {i+1}", expanded=(i < 3)):
         pay_name = st.selectbox(
