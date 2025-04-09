@@ -130,7 +130,7 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         pdf.set_font("Bookman", "B", 10)
         safe_cell(pdf, col_desc_w, 6, "DESCRIPTION", border=1, new_line=False, align="C")
         safe_cell(pdf, col_price_w, 6, "TOTAL PRICE", border=1, new_line=False, align="C")
-        safe_cell(pdf, col_paid_w, 6, "TO BE PAID", border=1, new_line=True, align="C")
+        safe_cell(pdf, col_paid_w, 6, "AMOUNT TO BE PAID", border=1, new_line=True, align="C")
         
         pdf.set_font("Bookman", "", 10)
         sum_price = 0
