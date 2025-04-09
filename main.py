@@ -227,8 +227,8 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
             return current_y
         
         def example_bank_details_4columns(pdf):
-            pdf.set_font("Bookman", "B", 10)
-            safe_cell(pdf, 0, 5, "Bank Transfer Details:", new_line=True)
+            pdf.set_font("Bookman", "B", 11)
+            safe_cell(pdf, 0, 5, "Bank Transfer Details", new_line=True,  align="C")
             pdf.ln(2)
             
             col1_data = [
@@ -297,7 +297,7 @@ def create_invoice_pdf(invoice_data: dict) -> bytes:
         ]
         for idx, term in enumerate(standard_terms):
             if idx in [0, 1]:
-                pdf.set_font("Bookman", "B", 8)
+                pdf.set_font("Bookman", "B", 9)
             else:
                 pdf.set_font("Bookman", "", 8)
             pdf.write(5, term + "\n")
