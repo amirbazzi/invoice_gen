@@ -1253,15 +1253,15 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
 
 
         # --- 5.a) Payment Plan Details ---
-        pdf.set_font("Bookman", "", base_font_size - 2)
+        pdf.set_font("Bookman", "", base_font_size - 1)
         for i, pay in enumerate(invoice_data["payments"]):
             # bullet + ordinal
             pdf.write(5, f"• A {ordinal(i)} payment of ")
             # percentage in bold
-            pdf.set_font("Bookman", "B", base_font_size - 2)
+            pdf.set_font("Bookman", "B", base_font_size - 1)
             pdf.write(5, f"{pay['percentage']}%")
             # back to normal
-            pdf.set_font("Bookman", "", base_font_size - 2)
+            pdf.set_font("Bookman", "", base_font_size - 1)
             pdf.write(5, " of the total price is required")
             if pay["name"]:
                 pdf.write(5, f" as {pay['name']}")
@@ -1269,7 +1269,7 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
                 pdf.write(5, f" ({pay['description']})")
             pdf.write(5, "\n")
         
-        pdf.set_font("Bookman", "", base_font_size - 2)
+        pdf.set_font("Bookman", "", base_font_size - 1)
         standard_terms = [
             "• As per the company policy, once a dress is purchased, it is not subject to return or refund",
             "• Once the purchase details and samples are approved by the client, the dress is not subject to any changes",
@@ -1281,9 +1281,9 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
         ]
         for idx, term in enumerate(standard_terms):
             if idx in [0, 1, 3, 4, 5]:
-                pdf.set_font("Bookman", "B", base_font_size - 2)
+                pdf.set_font("Bookman", "B", base_font_size - 1)
             else:
-                pdf.set_font("Bookman", "", base_font_size - 2)
+                pdf.set_font("Bookman", "", base_font_size - 1)
             pdf.write(5, term + "\n")
         
         pdf.ln(3)
@@ -1291,7 +1291,7 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
         pdf.line(10, y_line, 200, y_line)
         pdf.ln(3)
         
-        pdf.set_font("Bookman", "B", base_font_size - 2)
+        pdf.set_font("Bookman", "B", base_font_size - 1)
         safe_cell(pdf, 0, 5, "THANK YOU FOR CHOOSING ASHI STUDIO", new_line=True, align="C")
         safe_cell(pdf, 0, 5, "WWW.ASHISTUDIO.COM", new_line=True, align="C")
 
