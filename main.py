@@ -1025,7 +1025,7 @@ def print_bank_details(pdf, bank_choice):
             ("BANK ADDRESS", "1 rue Saint-Lazare\n75009 Paris, France"),
         ]
         col3 = [
-            ("ACCOUNT CURR.", "EUR (Euro)"),
+            ("ACCOUNT CURRENCY", "EUR (Euro)"),
             ("IBAN",          "FR76 3000 3034 5100 0201 5631 367"),  # bold & one‐line
 
         ]
@@ -1042,7 +1042,7 @@ def print_bank_details(pdf, bank_choice):
             ("BANK ADDRESS", "Agency Paris Turenne"),
         ]
         col3 = [
-            ("ACCOUNT CURR.", "EUR (Euro)"),
+            ("ACCOUNT CURRENCY", "EUR (Euro)"),
             ("IBAN",          "FR76 3000 4008 2300 0108 9656 803"),  # bold & one‐line
 
             
@@ -1076,7 +1076,7 @@ def print_bank_details(pdf, bank_choice):
         cy = pdf.get_y()
         pdf.set_xy(x3, cy)
         if title == "IBAN:":
-            pdf.set_font("Bookman", "B", 8)
+            pdf.set_font("Bookman", "B", 9)
             safe_cell(pdf, col3_w, 5, detail, border=0, new_line=True, align="L")
             cy = pdf.get_y()
         else:
