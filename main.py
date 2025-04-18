@@ -995,9 +995,8 @@ def init_pdf(base_font_size=10) -> FPDF:
     except Exception as e:
         st.error(f"PDF initialization failed: {e}")
         return None
-
 # -------------------------------------------------------------------
-# Bank Details Functions
+# Bank Details Functions (with reduced spacing before 4th column)
 # -------------------------------------------------------------------
 def print_bank_column(pdf, start_x, start_y, col_width, data, title_size=8, detail_size=8):
     current_y = start_y
@@ -1013,64 +1012,84 @@ def print_bank_column(pdf, start_x, start_y, col_width, data, title_size=8, deta
     return current_y
 
 def print_bank_details(pdf, bank_choice):
-    """Print bank details based on the selected bank."""
     pdf.set_font("Bookman", "B", 11)
     safe_cell(pdf, 0, 5, "Bank Transfer Details", new_line=True, align="C")
     pdf.ln(2)
-    
-    if bank_choice == "Societe Generale":
-        col1_data = [
-            ("BENEFICIARY:", "ASHI STUDIO SAS\nBUREAU 326\n78 AVENUE DES CHAMPS ELYSEES\n75008 PARIS-8E-ARRONDISSEMENT"),
-            ("REGISTRATION number:", "939 282 414 00019"),
-            ("VAT:", "FR67939282414"),
-        ]
-        col2_data = [
-            ("BANK NAME:", "SOCIETE GENERALE"),
-            ("AGENCY ADDRESS:", "1 rue Saint-Lazare\n75009 Paris\nFrance"),
-            ("AGENCY CODE:", "03451"),
-        ]
-        col3_data = [
-            ("ACCOUNT CURRENCY:", "EUR (Euro)"),
-            ("IBAN:", "FR76 3000 3034 5100 0201 5631 367"),
-            ("RIB:", "67k"),
-        ]
-        col4_data = [
-            ("SWIFT:", "SOGEFRPP"),
-            ("ACCOUNT N°:", "00020156313"),
-            ("BANK CODE:", "30003"),
-        ]
-    else:  # Default to BNP Paribas
-        col1_data = [
-            ("BENEFICIARY:", "ASHI STUDIO SAS\n9 AVENUE HOCHE\n75008 PARIS, FRANCE"),
-            ("REGISTRATION number:", "922 266 788 00012"),
-            ("VAT:", "FR21922266788"),
-        ]
-        col2_data = [
-            ("BANK NAME:", "BNP PARIBAS"),
-            ("AGENCY ADDRESS:", "Agency Paris Turenne"),
-            ("AGENCY CODE:", "00823"),
-        ]
-        col3_data = [
-            ("ACCOUNT CURRENCY:", "EUR (Euro)"),
-            ("IBAN:", "FR76 3000 4008 2300 0108 9656 803"),
-            ("RIB:", "03"),
-        ]
-        col4_data = [
-            ("SWIFT:", "BNPAFRPPXXX"),
-            ("ACCOUNT N°:", "00010896568"),
-            ("BANK CODE:", "30004"),
-        ]
-    
-    start_x = 10
-    start_y = pdf.get_y()
-    col_width = 45
-    col_spacing = 10
 
-    col1_end = print_bank_column(pdf, start_x, start_y, col_width, col1_data)
-    col2_end = print_bank_column(pdf, start_x + col_width + col_spacing, start_y, col_width, col2_data)
-    col3_end = print_bank_column(pdf, start_x + 2*(col_width + col_spacing), start_y, col_width, col3_data)
-    col4_end = print_bank_column(pdf, start_x + 3*(col_width + col_spacing), start_y, col_width, col4_data)
-    final_y = max(col1_end, col2_end, col3_end, col4_end)
+    if bank_choice == "Societe Generale":
+        col1 = [
+            ("BENEFICIARY",    "ASHI STUDIO SAS\n78 AVENUE DES CHAMPS ELYSEES 75008\nPARIS, FRANCE"),
+        ]
+        col2 = [
+            ("BANK NAME",    "SOCIETE GENERALE"),
+            ("BANK ADDRESS", "1 rue Saint-Lazare\n75009 Paris, France"),
+        ]
+        col3 = [
+            ("ACCOUNT CURR.", "EUR (Euro)"),
+            ("IBAN",          "FR76 3000 3034 5100 0201 5631 367"),  # bold & one‐line
+
+        ]
+        col4 = [
+            ("SWIFT",       "SOGEFRPP"),
+            ("VAT",            "FR67939282414"),
+        ]
+    else:
+        col1 = [
+            ("BENEFICIARY",    "ASHI STUDIO SAS\n9 AVENUE HOCHE 75008\nPARIS, FRANCE"),
+            
+        ]
+        col2 = [
+            ("BANK NAME",    "BNP PARIBAS"),
+            ("BANK ADDRESS", "Agency Paris Turenne"),
+        ]
+        col3 = [
+            ("ACCOUNT CURR.", "EUR (Euro)"),
+            ("IBAN",          "FR76 3000 4008 2300 0108 9656 803"),  # bold & one‐line
+
+            
+        ]
+        col4 = [
+            ("SWIFT",       "BNPAFRPPXXX"),
+            ("VAT",            "FR21922266788"),
+        ]
+
+    # column widths
+    col1_w, col2_w, col3_w, col4_w = 45, 35, 65, 35
+
+    # reduced spacing before the 4th column
+    spacing12, spacing23, spacing34 = 5, 5, 5
+
+    x1 = 10
+    y0 = pdf.get_y()
+    x2 = x1 + col1_w + spacing12
+    x3 = x2 + col2_w + spacing23
+    x4 = x3 + col3_w + spacing34  # tighter here!
+
+    # print cols 1 & 2
+    end1 = print_bank_column(pdf, x1, y0, col1_w, col1)
+    end2 = print_bank_column(pdf, x2, y0, col2_w, col2)
+
+    # col 3 with special IBAN handling
+    cy = y0
+    for title, detail in col3:
+        pdf.set_xy(x3, cy)
+        pdf.set_font("Bookman", "BU", 8)
+        pdf.multi_cell(col3_w, 5, title, 0, "L")
+        cy = pdf.get_y()
+        pdf.set_xy(x3, cy)
+        if title == "IBAN:":
+            pdf.set_font("Bookman", "B", 8)
+            safe_cell(pdf, col3_w, 5, detail, border=0, new_line=True, align="L")
+            cy = pdf.get_y()
+        else:
+            pdf.set_font("Bookman", "", 8)
+            pdf.multi_cell(col3_w, 5, detail, 0, "L")
+            cy = pdf.get_y()
+
+    # col 4
+    end4 = print_bank_column(pdf, x4, y0, col4_w, col4)
+
+    final_y = max(end1, end2, cy, end4)
     pdf.set_y(final_y + 5)
     y_line = pdf.get_y()
     pdf.line(10, y_line, 200, y_line)
@@ -1131,7 +1150,7 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
         pdf.set_x(table_left)
         pdf.set_font("Bookman", "B", base_font_size)
         safe_cell(pdf, col_desc_w, 6, "DESCRIPTION", border=1, new_line=False, align="C")
-        safe_cell(pdf, col_price_w, 6, "TOTAL PRICE", border=1, new_line=False, align="C")
+        safe_cell(pdf, col_price_w, 6, "TOTAL PRICE in EURO", border=1, new_line=False, align="C")
         safe_cell(pdf, col_paid_w, 6, "AMOUNT TO BE PAID", border=1, new_line=True, align="C")
         
         pdf.set_font("Bookman", "", base_font_size)
@@ -1149,12 +1168,22 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
             safe_cell(pdf, col_price_w, 6, f"{price:,d} ", border=1, new_line=False, align="C")
             safe_cell(pdf, col_paid_w, 6, f"{paid:,d} ", border=1, new_line=True, align="R")
         
+        # --- Totals Row ---
+        # 1) Position at the LEFT edge of the DESCRIPTION column
         pdf.set_x(table_left)
+
+        # 2) Print “Total” in the DESCRIPTION column
         pdf.set_font("Bookman", "B", base_font_size)
-        safe_cell(pdf, col_desc_w, 6, "  Total", border=0, new_line=False, align="L")
+        safe_cell(pdf, col_desc_w, 6, "     Total", border=0, new_line=False, align="R")
+
+        # 3) sum_price, centered in the PRICE column
         pdf.set_font("Bookman", "", base_font_size)
-        safe_cell(pdf, col_price_w, 6, f"{sum_price:,d} ", border=0, new_line=False, align="C")
-        safe_cell(pdf, col_paid_w, 6, f"{sum_paid:,d} ", border=0, new_line=True, align="R")
+        safe_cell(pdf, col_price_w, 6, f"{sum_price:,d}", border=0, new_line=False, align="C")
+
+        # 4) sum_paid, centered in the AMOUNT column, then newline
+        safe_cell(pdf, col_paid_w, 6, f"{sum_paid:,d}", border=0, new_line=True, align="R")
+
+
         
         vat = invoice_data["vat"]
         final_total = sum_paid + vat
@@ -1201,7 +1230,7 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
                 amt = int(round(perc / 100 * sum_price_local))
 
             pdf.set_x(pay_table_left)
-            safe_cell(pdf, col_payname_w, 6, pay_name, border=1, new_line=False, align="L")
+            safe_cell(pdf, col_payname_w, 6, f"  {pay_name}", border=1, new_line=False, align="L")
             safe_cell(pdf, col_paydate_w, 6, pay_date, border=1, new_line=False, align="C")
             safe_cell(pdf, col_perc_w, 6, f"{perc:,d}%", border=1, new_line=False, align="C")
             safe_cell(pdf, col_amt_w, 6, f"{amt:,d} {CURRENCY_SYMBOL}", border=1, new_line=True, align="C")
@@ -1220,7 +1249,25 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
         # --- 5) TERMS & CONDITIONS ---
         pdf.set_font("Bookman", "B", base_font_size)
         safe_cell(pdf, 0, 5, "Terms & Conditions", new_line=True)
-        pdf.ln(3)
+        pdf.ln(2)
+
+
+        # --- 5.a) Payment Plan Details ---
+        pdf.set_font("Bookman", "", base_font_size - 2)
+        for i, pay in enumerate(invoice_data["payments"]):
+            # bullet + ordinal
+            pdf.write(5, f"• A {ordinal(i)} payment of ")
+            # percentage in bold
+            pdf.set_font("Bookman", "B", base_font_size - 2)
+            pdf.write(5, f"{pay['percentage']}%")
+            # back to normal
+            pdf.set_font("Bookman", "", base_font_size - 2)
+            pdf.write(5, " of the total price is required")
+            if pay["name"]:
+                pdf.write(5, f" as {pay['name']}")
+            if pay["description"]:
+                pdf.write(5, f" ({pay['description']})")
+            pdf.write(5, "\n")
         
         pdf.set_font("Bookman", "", base_font_size - 2)
         standard_terms = [
@@ -1229,7 +1276,7 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
             "• The delivery date is scheduled as per the agreement with the sales team upon order confirmation; in case of any date change or event cancellation, Ashi Studio will be working according to the initial date provided",
             "• Any addition to the dress, requested by the client, will be charged separately",
             "• After doing the final fitting and dress adjustments, once the dress is received, any changes requested are not covered by Ashi Studio and are subject to additional payments",
-            "• Fittings and delivery will be in the client country of origin or in AshI STUDIO showroom in Paris; any changes in the destination will be at the cost of the client",
+            "• Fittings and delivery will be in the client country of origin or in Ashi Studio showroom in Paris; any changes in the destination will be at the cost of the client",
             "• Exemption from VAT, article 262 I of the CGI – Sale to a third-country (outside the European Union)."
         ]
         for idx, term in enumerate(standard_terms):
@@ -1335,7 +1382,7 @@ st.write("---")
 st.subheader("Payment Schedule (must sum up to Total Price)")
 num_payments = st.number_input("Number of Payments", 1, 10, 3)
 payments = []
-default_options = ["", "  Down payment", "  Fitting payment", "  Closing payment", "  Full payment"]
+default_options = ["", "Down payment", "Fitting payment", "Closing payment", "Full payment"]
 for i in range(int(num_payments)):
     with st.expander(f"Payment {i+1}", expanded=(i < 3)):
         pay_name = st.selectbox(
