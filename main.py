@@ -1031,7 +1031,6 @@ def print_bank_details(pdf, bank_choice):
         ]
         col4 = [
             ("SWIFT",       "SOGEFRPP"),
-            ("VAT",            "FR67939282414"),
         ]
     else:
         col1 = [
@@ -1050,7 +1049,6 @@ def print_bank_details(pdf, bank_choice):
         ]
         col4 = [
             ("SWIFT",       "BNPAFRPPXXX"),
-            ("VAT",            "FR21922266788"),
         ]
 
     # column widths
