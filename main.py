@@ -1018,7 +1018,7 @@ def print_bank_details(pdf, bank_choice):
 
     if bank_choice == "Societe Generale":
         col1 = [
-            ("BENEFICIARY",    "ASHI STUDIO SAS\n78 AVENUE DES CHAMPS ELYSEES 75008\nPARIS, FRANCE"),
+            ("BENEFICIARY",    "ASHI STUDIO \n78 AVENUE DES CHAMPS ELYSEES 75008\nPARIS, FRANCE"),
         ]
         col2 = [
             ("BANK NAME",    "SOCIETE GENERALE"),
@@ -1034,7 +1034,7 @@ def print_bank_details(pdf, bank_choice):
         ]
     else:
         col1 = [
-            ("BENEFICIARY",    "ASHI STUDIO SAS\n9 AVENUE HOCHE 75008\nPARIS, FRANCE"),
+            ("BENEFICIARY",    "ASHI STUDIO \n9 AVENUE HOCHE 75008\nPARIS, FRANCE"),
             
         ]
         col2 = [
@@ -1104,6 +1104,22 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
     pdf.set_margins(10, 10, 10)
     pdf.set_auto_page_break(auto=True, margin=10)
 
+    # Determine which header address to use based on bank choice
+    bank = invoice_data.get("bank", "BNP Paribas")
+    if bank == "Societe Generale":
+        header_lines = [
+            "ASHI STUDIO",
+            "BUREAU 326",
+            "78 AVENUE DES CHAMPS ELYSEES 75008",
+            "PARIS, FRANCE"
+        ]
+    else:
+        header_lines = [
+            "ASHI STUDIO",
+            "9 AVENUE HOCHE 75008",
+            "PARIS, FRANCE"
+        ]
+
     try:
         # --- 1) HEADER ---
         if os.path.exists(LOGO_PATH):
@@ -1111,17 +1127,19 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
         else:
             st.warning(f"Logo file not found: {LOGO_PATH}")
         pdf.set_y(30)
-        
+
+        # Company name (bold)
         pdf.set_font("Bookman", "B", base_font_size)
         pdf.set_xy(10, 30)
-        safe_cell(pdf, 60, 5, "ASHI STUDIO SAS", new_line=True)
-        
+        safe_cell(pdf, 60, 5, header_lines[0], new_line=True)
+
+        # Address lines (regular)
         pdf.set_font("Bookman", "", base_font_size - 1)
-        pdf.set_x(10)
-        safe_cell(pdf, 60, 5, "9 AVENUE HOCHE", new_line=True)
-        pdf.set_x(10)
-        safe_cell(pdf, 60, 5, "75008 PARIS, FRANCE", new_line=True)
-        
+        for line in header_lines[1:]:
+            pdf.set_x(10)
+            safe_cell(pdf, 60, 5, line, new_line=True)
+
+        # Invoice number & date on the right
         pdf.set_xy(140, 30)
         inv_text = (
             f"Invoice Number: {invoice_data['invoice_number']}\n\n"
@@ -1129,13 +1147,14 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
         )
         pdf.multi_cell(60, 5, inv_text, align="R")
         pdf.ln(5)
-        
+
+        # --- 2) CLIENT INFORMATION ---
         pdf.set_font("Bookman", "B", base_font_size)
         safe_cell(pdf, 0, 5, "Client Information", new_line=True)
         pdf.set_font("Bookman", "", base_font_size)
-        safe_cell(pdf, 0, 5, f"Name: {invoice_data['client_name']}", new_line=True)
+        safe_cell(pdf, 0, 5, f"Name:    {invoice_data['client_name']}", new_line=True)
         safe_cell(pdf, 0, 5, f"Country: {invoice_data['country']}", new_line=True)
-        safe_cell(pdf, 0, 5, f"Phone: {invoice_data['phone']}", new_line=True)
+        safe_cell(pdf, 0, 5, f"Phone:   {invoice_data['phone']}", new_line=True)
         pdf.ln(5)
         
         # --- 2) ITEMS TABLE (centered) ---
