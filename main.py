@@ -945,7 +945,7 @@ from fpdf import FPDF
 # -------------------------------------------------------------------
 FONT_BOOKMAN_REGULAR = "BOOKOS.TTF"  # Bookman Old Style Regular
 FONT_BOOKMAN_BOLD = "BOOKOSB.TTF"    # Bookman Old Style Bold
-LOGO_PATH = "ashi_logo.jpg"
+LOGO_PATH = "ashi_logo_2.jpg"
 CURRENCY_SYMBOL = "€"
 
 # -------------------------------------------------------------------
@@ -1109,7 +1109,6 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
     if bank == "Societe Generale":
         header_lines = [
             "ASHI STUDIO",
-            "BUREAU 326",
             "78 AVENUE DES CHAMPS ELYSEES 75008",
             "PARIS, FRANCE"
         ]
