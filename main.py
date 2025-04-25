@@ -1109,14 +1109,14 @@ def create_invoice_pdf_instance(invoice_data: dict, base_font_size: int) -> FPDF
     if bank == "Societe Generale":
         header_lines = [
             "ASHI STUDIO",
-            "78 AVENUE DES CHAMPS ELYSEES 75008",
-            "PARIS, FRANCE"
+            "78 AVENUE DES CHAMPS ELYSEES",
+            "75008, PARIS, FRANCE"
         ]
     else:
         header_lines = [
             "ASHI STUDIO",
-            "9 AVENUE HOCHE 75008",
-            "PARIS, FRANCE"
+            "9 AVENUE HOCHE",
+            "75008, PARIS, FRANCE"
         ]
 
     try:
