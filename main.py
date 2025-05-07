@@ -1393,33 +1393,57 @@ st.write(f"**Total To Be Paid:** {sum_paid:,d} {CURRENCY_SYMBOL}")
 st.write(f"**VAT:** {vat_val:,d} {CURRENCY_SYMBOL}")
 st.write(f"**Final To Be Paid (with VAT):** {final_total_paid:,d} {CURRENCY_SYMBOL}")
 st.write("---")
-
 # --- 3) Payment Schedule ---
 st.subheader("Payment Schedule (must sum up to Total Price)")
-num_payments = st.number_input("Number of Payments", 1, 10, 3)
+num_payments = st.number_input("Number of Payments", min_value=1, max_value=10, value=3)
 payments = []
-default_options = ["", "Down payment", "Fitting payment", "Closing payment", "Full payment"]
+default_options = ["", "Down payment", "Fitting payment", "Closing payment", "Full payment", "Other…"]
+
 for i in range(int(num_payments)):
     with st.expander(f"Payment {i+1}", expanded=(i < 3)):
-        pay_name = st.selectbox(
+        # Dynamic payment title: choose from defaults or enter custom
+        pay_choice = st.selectbox(
             f"Payment Title {i+1}",
             default_options,
-            key=f"pay_name_{i}",
-            index=0
+            key=f"pay_choice_{i}"
         )
-        date_enabled = st.checkbox(f"Set date for Payment {i+1}", value=(i == 0), key=f"chk_date_{i}")
-        pay_date = st.date_input(f"Date {i+1}", value=date.today(), key=f"pay_date_{i}") if date_enabled else ""
+        if pay_choice == "Other…":
+            pay_name = st.text_input(f"Custom Payment Title {i+1}", key=f"custom_pay_name_{i}")
+        else:
+            pay_name = pay_choice
+
+        # Optional date
+        date_enabled = st.checkbox(
+            f"Set date for Payment {i+1}",
+            value=(i == 0),
+            key=f"chk_date_{i}"
+        )
+        if date_enabled:
+            pay_date = st.date_input(
+                f"Date {i+1}",
+                value=date.today(),
+                key=f"pay_date_{i}"
+            ).strftime("%d-%m-%Y")
+        else:
+            pay_date = ""
+
+        # Percentage and amount fields side by side
         col_perc, col_amt = st.columns(2)
         with col_perc:
             perc_str = st.text_input(f"Percentage {i+1}", "", key=f"perc_{i}")
         with col_amt:
             amt_str = st.text_input(f"Amount {i+1} (use commas)", "", key=f"amt_{i}")
+
+        # Optional description
         pay_desc = st.text_input(f"Description {i+1}", "", key=f"desc_pay_{i}")
+
+        # Parse numeric inputs
         perc_val = parse_int_with_commas(perc_str)
         amt_val = parse_int_with_commas(amt_str)
+
         payments.append({
             "name": pay_name,
-            "date": pay_date.strftime("%d-%m-%Y") if date_enabled else "",
+            "date": pay_date,
             "percentage": perc_val,
             "amount": amt_val,
             "description": pay_desc
